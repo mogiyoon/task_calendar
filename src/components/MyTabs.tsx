@@ -8,7 +8,6 @@ import Calendar from '../screens/Calendar';
 import Library from '../screens/Library';
 import MyPage from '../screens/MyPage';
 
-// 1. 각 탭의 파라미터 타입을 정의합니다. (파라미터가 없으면 undefined)
 type RootTabParamList = {
   HOME: undefined;
   CALENDAR: undefined;
@@ -16,7 +15,6 @@ type RootTabParamList = {
   MYPAGE: undefined;
 };
 
-// 2. TabBarIcon 컴포넌트가 받을 props의 타입을 정의합니다.
 interface TabBarIconProps {
   focused: boolean;
   color: string;
@@ -24,7 +22,6 @@ interface TabBarIconProps {
   route: RouteProp<RootTabParamList, keyof RootTabParamList>;
 }
 
-// 3. 아이콘 렌더링 로직을 담당하는 별도의 컴포넌트를 생성합니다.
 const TabBarIcon = ({ focused, color, size, route }: TabBarIconProps) => {
   let iconName: string = 'alert-circle-outline';
 
@@ -50,7 +47,7 @@ const MyTabs = () => {
         // 4. 분리된 TabBarIcon 컴포넌트를 호출하여 사용합니다.
         tabBarIcon: (props) => <TabBarIcon {...props} route={route} />,
         
-        tabBarActiveTintColor: 'tomato',
+        tabBarActiveTintColor: 'black',
         tabBarInactiveTintColor: 'gray',
         tabBarStyle: {
           backgroundColor: '#f8f8f8',
