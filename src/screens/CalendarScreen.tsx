@@ -1,17 +1,18 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View } from 'react-native';
+import { Calendar } from '../components/Calendar';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 function CalendarScreen() {
+  const testDate = new Date(2025, 7, 1);
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Calendar</Text>
-    </View>
+    <SafeAreaView>
+      <View>
+        <Calendar year={testDate.getFullYear()} month={testDate.getMonth()}/>
+      </View>
+    </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  text: { fontSize: 24 },
-});
 
 export default CalendarScreen;
