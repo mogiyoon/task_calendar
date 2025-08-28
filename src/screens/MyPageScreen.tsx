@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
-function Library() {
+function MyPageScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>홈 화면</Text>
+      <Text style={styles.text}>My Page</Text>
     </View>
   );
 }
@@ -14,4 +14,4 @@ const styles = StyleSheet.create({
   text: { fontSize: 24 },
 });
 
-export default Library;
+export default MyPageScreen;

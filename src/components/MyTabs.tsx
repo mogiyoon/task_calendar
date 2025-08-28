@@ -3,9 +3,9 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import HomeScreen from '../screens/HomeScreen';
-import Calendar from '../screens/Calendar';
-import Library from '../screens/Library';
-import MyPage from '../screens/MyPage';
+import CalendarScreen from '../screens/CalendarScreen';
+import LibraryScreen from '../screens/LibraryScreen';
+import MyPageScreen from '../screens/MyPageScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -48,17 +48,17 @@ const MyTabs = () => {
       />
       <Tab.Screen
         name="Calendar"
-        component={Calendar}
+        component={CalendarScreen}
         options={{ tabBarLabel: 'CALENDAR' }}
       />
       <Tab.Screen
         name="Library"
-        component={Library}
+        component={LibraryScreen}
         options={{ tabBarLabel: 'LIBRARY' }}
       />
       <Tab.Screen
         name="MyPage"
-        component={MyPage}
+        component={MyPageScreen}
         options={{ tabBarLabel: 'MY PAGE' }}
       />
     </Tab.Navigator>

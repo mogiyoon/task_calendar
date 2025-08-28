@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
-function Calendar() {
+function CalendarScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>홈 화면</Text>
+      <Text style={styles.text}>Calendar</Text>
     </View>
   );
 }
@@ -14,4 +14,4 @@ const styles = StyleSheet.create({
   text: { fontSize: 24 },
 });
 
-export default Calendar;
+export default CalendarScreen;
