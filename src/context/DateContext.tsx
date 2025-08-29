@@ -1,4 +1,4 @@
-import { createContext, useState, useContext, ReactNode, FC, useEffect } from 'react';
+import { createContext, useState, useContext, ReactNode, FC } from 'react';
 
 interface DateContextType {
   year: number;
@@ -15,6 +15,9 @@ interface DateContextType {
   focusedWeek: Date;
   handlePrevWeek: () => void;
   handleNextWeek: () => void;
+
+  handlePrev: () => void;
+  handleNext: () => void;
 }
 
 const DateContext = createContext<DateContextType | null>(null);
@@ -31,13 +34,6 @@ export const DateProvider: FC<DateProviderProps> = ({ children }) => {
   const [focusedDate, setFocusedDate] = useState<Date | null>(null);
   const [focusedWeek, setFocusedWeek] = useState<Date>(weekFirstDate);
 
-  useEffect(() => {
-      const baseDate = new Date(focusedDate || date);
-      weekFirstDate.setDate(baseDate.getDate() - baseDate.getDay());
-      setFocusedWeek(weekFirstDate);
-  }, [focusedDate]);
-
-
   const month = date.getMonth();
   const year = date.getFullYear();
   
@@ -47,24 +43,60 @@ export const DateProvider: FC<DateProviderProps> = ({ children }) => {
     setFocusedWeek((prev) => {
       const nextWeek = new Date(prev);
       nextWeek.setDate(nextWeek.getDate() + 7);
+      if (prev.getMonth() !== nextWeek.getMonth()) {
+        handleNextMonth();
+      }
       return nextWeek;
     })
   }
 
   const handlePrevWeek = () => {
     setFocusedWeek((prev) => {
-      const nextWeek = new Date(prev);
-      nextWeek.setDate(nextWeek.getDate() - 7);
-      return nextWeek;
+      const prevWeek = new Date(prev);
+      prevWeek.setDate(prevWeek.getDate() - 7);
+      if (prev.getMonth() !== prevWeek.getMonth()) {
+        handlePrevMonth();
+      }
+      return prevWeek;
     })
   }
 
   const handleNextMonth = () => {
-    setDate(new Date(year, month + 1));
+    console.log('handle next month')
+    const newMonth = month + 1
+    setDate(new Date(year, newMonth));
+    setFocusedWeek(() => {
+      const newWeek = new Date(year, newMonth, 1);
+      newWeek.setDate(newWeek.getDate() - newWeek.getDay());
+      return newWeek;
+    })
   }
 
   const handlePrevMonth = () => {
-    setDate(new Date(year, month - 1));
+    console.log('handle prev month')
+    const newMonth = month - 1
+    setDate(new Date(year, newMonth));
+    setFocusedWeek(() => {
+      const newWeek = new Date(year, newMonth, 1);
+      newWeek.setDate(newWeek.getDate() - newWeek.getDay());
+      return newWeek;
+    })
+  }
+
+  const handleNext = () => {
+    if (isMonthMode) {
+      handleNextMonth();
+    } else {
+      handleNextWeek();
+    }
+  }
+
+  const handlePrev = () => {
+    if (isMonthMode) {
+      handlePrevMonth();
+    } else {
+      handlePrevWeek();
+    }
   }
 
   const value: DateContextType = {
@@ -81,7 +113,10 @@ export const DateProvider: FC<DateProviderProps> = ({ children }) => {
 
     focusedWeek,
     handleNextWeek: handleNextWeek,
-    handlePrevWeek: handlePrevWeek
+    handlePrevWeek: handlePrevWeek,
+
+    handleNext: handleNext,
+    handlePrev: handlePrev
   };
 
   return <DateContext.Provider value={value}>{children}</DateContext.Provider>;

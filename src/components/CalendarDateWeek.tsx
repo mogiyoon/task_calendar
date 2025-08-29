@@ -109,7 +109,12 @@ export const CalendarDateWeek: React.FC<CalendarWeekProps> = ({
         },
       );
     }
-  }, [isMonthMode, isThisWeek]);
+  }, [    isMonthMode,
+    isThisWeek,
+    animatedWeekHeight,
+    animatedWeekOpacity,
+    calendarWeekHeight,
+    calendarWeekOpacity,]);
 
   const animatedWeekContainerStyle = useAnimatedStyle(() => {
     return {
