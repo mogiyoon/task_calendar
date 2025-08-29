@@ -113,6 +113,9 @@ export const CalendarDateWeek: React.FC<CalendarWeekProps> = ({ firstDay }) => {
             duration: 800,
           },
         );
+      } else {
+        animatedWeekHeight.value = isMonthMode ? calendarWeekHeight.value : 0;
+        animatedWeekOpacity.value = isMonthMode ? calendarWeekOpacity.value : 0;
       }
     }
   }, [
