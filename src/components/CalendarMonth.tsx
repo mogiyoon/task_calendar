@@ -1,135 +1,108 @@
-import { useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-
-/*
-Date Component
-*/
-interface CalendarDateProps {
-  detailDate: Date;
-  focusedDate: Date | null;
-  nowMonth: number;
-  setFocusedDate: React.Dispatch<React.SetStateAction<Date|null>>
-}
-
-const CalendarDate: React.FC<CalendarDateProps> = ({detailDate, focusedDate, nowMonth, setFocusedDate}) => {
-  return (
-    <TouchableOpacity
-      onPress={() => setFocusedDate(detailDate)}
-      style={[
-          dateContainerStyles.container, 
-          detailDate.getTime() === focusedDate?.getTime() && dateContainerStyles.focusedContainer,
-      ]}
-    >
-      <Text style={
-        detailDate.getMonth() === nowMonth ? dateTextStyles.sameMonthText : dateTextStyles.diffMonthText
-      }>
-        {detailDate.getDate()}
-      </Text>
-    </TouchableOpacity>
-  );
-}
-
-const dateContainerStyles = StyleSheet.create({
-  container: {
-    width: 26,
-    height: 26,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  focusedContainer: {
-    borderWidth: 2,
-    borderRadius: 13,
-    borderColor: '#63a7ff'
-  }
-})
-
-const dateTextStyles = StyleSheet.create({
-  sameMonthText: {
-    color: '#000000',
-  },
-  diffMonthText: {
-    color: '#b6b6b6',
-  }
-})
-
-/*
-Week Component
-*/
-interface CalendarWeekProps {
-  dateList: Date[]
-  nowMonth: number;
-  focusedDate: Date | null;
-  setFocusedDate: React.Dispatch<React.SetStateAction<Date|null>>
-}
-
-const CalendarWeek: React.FC<CalendarWeekProps> = ({dateList, focusedDate, nowMonth, setFocusedDate}) => {
-  return (
-    <View style={weekContainerStyles.container}>
-      {dateList.map((date) => (
-        <CalendarDate key={date.getTime()} detailDate={date} focusedDate={focusedDate} nowMonth={nowMonth} setFocusedDate={setFocusedDate}/>
-      ))}
-    </View>
-  );
-}
-
-const weekContainerStyles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    marginVertical: 8
-  }
-})
-
+import { StyleSheet } from 'react-native';
+import { CalendarDateWeek } from './CalendarDateWeek';
+import { runOnJS } from 'react-native-worklets';
+import { useEffect, useState } from 'react';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 /*
 Month Component
 */
 interface CalendarMonthProps {
-  year: number
-  month: number
+  year: number;
+  month: number;
+  focusedDate: Date | null;
+  setFocusedDate: React.Dispatch<React.SetStateAction<Date | null>>;
+  focusedWeek: Date
 }
 
-export const CalendarMonth: React.FC<CalendarMonthProps> = ({year, month}) => {
-  const [focusedDate, setFocusedDate] = useState<Date | null>(null);
+export const CalendarMonth: React.FC<CalendarMonthProps> = ({
+  year,
+  month,
+  focusedDate,
+  setFocusedDate,
+  focusedWeek
+}) => {
+  const [isMonthMode, setIsMonthMode] = useState(true);
 
   //첫 번째 날짜
   const firstDate = new Date(year, month, 1);
   const firstDay = firstDate.getDay();
-  
+
+  //첫 번째 주의 첫쨰 날
+  const tmpDate = new Date(year, month, 1);
+  tmpDate.setDate(firstDate.getDate() - firstDay);
+
   //마지막 날짜
   const lastDate = new Date(year, month + 1, 1);
   lastDate.setDate(lastDate.getDate() - 1);
+  const lastDay = lastDate.getDay();
 
-  //첫 번째 날짜의 주
-  let dayDiff = firstDay;
-  const tmpDate = new Date(year, month, 1);
-  tmpDate.setDate(firstDate.getDate() - dayDiff)
+  //마지막 주의 첫쨰 날
+  const finalWeekDate = new Date(year, month, 1);
+  finalWeekDate.setDate(lastDate.getDate() - lastDay);
 
-  let isLastWeek = false;
-  const dateToMonth: Date[][] = [];
+  const dateToMonth: Date[] = [];
 
   //첫 날이 어떤 요일인지에 따라 시작일을 다르게
-  while(!isLastWeek) {
-    const dateToWeek: Date[] = []
-    for (let i = 0; i < 7; i++) {
-      dateToWeek.push(new Date(tmpDate))
-      if (tmpDate.getTime() === lastDate.getTime()) {
-        isLastWeek = true;
-      }
-      tmpDate.setDate(tmpDate.getDate() + 1);
-    }
-    dateToMonth.push(dateToWeek)
+  while(tmpDate.getTime() <= lastDate.getTime()) {
+    const newTmpDate = new Date(tmpDate);
+    dateToMonth.push(newTmpDate)
+    tmpDate.setDate(tmpDate.getDate() + 7);
   }
+
+  const swipeGesture = Gesture.Pan()
+    .onEnd((event) => {
+      if (event.translationY < -50 && isMonthMode) {
+        runOnJS(setIsMonthMode)(false);
+      }
+      if (event.translationY > 50 && !isMonthMode) {
+        runOnJS(setIsMonthMode)(true);
+      }
+  });
+
+  const calendarMonthHeight = useSharedValue(1000);
+  const calendarWeekHeight = useSharedValue(200);
+  const animatedMonthHeight = useSharedValue(0);
+
+  useEffect(() => {
+      animatedMonthHeight.value = withTiming(
+        isMonthMode ? calendarMonthHeight.value : calendarWeekHeight.value,
+        {
+          duration: 200,
+        },
+      );
+  }, [isMonthMode, calendarMonthHeight.value]);
+
+  const animatedWeekContainerStyle = useAnimatedStyle(() => {
+    return {
+      height: animatedMonthHeight.value,
+      overflow: 'hidden',
+    };
+  });
 
   return (
-    <View style={monthContainerStyles.container}>
-      {dateToMonth.map((week) => (
-        <CalendarWeek key={week[0].getTime()} dateList={week} focusedDate={focusedDate} nowMonth={month} setFocusedDate={setFocusedDate}/>
-      ))}
-    </View>
-  )
-}
+    <GestureDetector gesture={swipeGesture}>
+      <Animated.View style={[monthContainerStyles.container, animatedWeekContainerStyle]}>
+        {dateToMonth.map((weekFirstDay) => (
+          <CalendarDateWeek
+            key={weekFirstDay.getTime()}
+            firstDay={weekFirstDay}
+            thisMonth={month}
+            focusedDate={focusedDate}
+            setFocusedDate={setFocusedDate}
+            focusedWeek={focusedWeek}
+            isMonthMode={isMonthMode}
+          />
+        ))}
+      </Animated.View>
+    </GestureDetector>
+  );
+};
 
 const monthContainerStyles = StyleSheet.create({
-  container: {
-  }
-})
+  container: {},
+});
