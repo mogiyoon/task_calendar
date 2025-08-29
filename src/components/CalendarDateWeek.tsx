@@ -5,22 +5,21 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useEffect } from 'react';
+import { useDate } from '../context/DateContext';
+import { stripTime } from '../utils/stripTime';
 /*
 Date Component
 */
 interface CalendarDateProps {
   detailDate: Date;
-  focusedDate: Date | null;
-  thisMonth: number;
-  setFocusedDate: React.Dispatch<React.SetStateAction<Date | null>>;
 }
 
 const CalendarDate: React.FC<CalendarDateProps> = ({
   detailDate,
-  focusedDate,
-  thisMonth,
-  setFocusedDate,
 }) => {
+
+  const { month, focusedDate, setFocusedDate } = useDate();
+
   return (
     <TouchableOpacity
       onPress={() => setFocusedDate(detailDate)}
@@ -32,7 +31,7 @@ const CalendarDate: React.FC<CalendarDateProps> = ({
     >
       <Text
         style={
-          detailDate.getMonth() === thisMonth
+          detailDate.getMonth() === month
             ? dateTextStyles.sameMonthText
             : dateTextStyles.diffMonthText
         }
@@ -71,21 +70,13 @@ Week Component
 */
 interface CalendarWeekProps {
   firstDay: Date;
-  thisMonth: number;
-  focusedDate: Date | null;
-  setFocusedDate: React.Dispatch<React.SetStateAction<Date | null>>;
-  focusedWeek: Date;
-  isMonthMode: boolean;
 }
 
 export const CalendarDateWeek: React.FC<CalendarWeekProps> = ({
   firstDay,
-  thisMonth,
-  focusedDate,
-  setFocusedDate,
-  focusedWeek,
-  isMonthMode,
 }) => {
+  const { focusedWeek, isMonthMode } = useDate();
+
   const thisWeek: Date[] = [];
   const tmpDate = new Date(firstDay);
   for (let i = 0; i < 7; i++) {
@@ -93,50 +84,58 @@ export const CalendarDateWeek: React.FC<CalendarWeekProps> = ({
     tmpDate.setDate(tmpDate.getDate() + 1);
   }
 
-  const calendarWeekHeight = useSharedValue(26);
-  const animatedWeekHeight = useSharedValue(26);
-  const isThisWeek = firstDay.getTime() === focusedWeek.getTime()
+  const calendarWeekHeight = useSharedValue(56);
+  const animatedWeekHeight = useSharedValue(56);
+  const calendarWeekOpacity = useSharedValue(1);
+  const animatedWeekOpacity = useSharedValue(1);
+
+  const isThisWeek = (stripTime(firstDay).getTime() === stripTime(focusedWeek).getTime());
 
   useEffect(() => {
     if (isThisWeek) {
       animatedWeekHeight.value = calendarWeekHeight.value;
-    } 
-    else {
+      animatedWeekOpacity.value = calendarWeekOpacity.value;
+    } else {
       animatedWeekHeight.value = withTiming(
         isMonthMode ? calendarWeekHeight.value : 0,
         {
           duration: 1000,
         },
       );
+      animatedWeekOpacity.value = withTiming(
+        isMonthMode ? calendarWeekOpacity.value : 0,
+        {
+          duration: 800,
+        },
+      );
     }
-  }, [isMonthMode, calendarWeekHeight.value, isThisWeek]);
+  }, [isMonthMode, isThisWeek]);
 
   const animatedWeekContainerStyle = useAnimatedStyle(() => {
     return {
       height: animatedWeekHeight.value,
+      opacity: animatedWeekOpacity.value,
       overflow: 'hidden',
     };
   });
 
   return (
-      <Animated.View
-        style={[weekContainerStyles.container, animatedWeekContainerStyle]}
-      >
-        {thisWeek.map(date => (
-          <CalendarDate
-            key={date.getTime()}
-            detailDate={date}
-            focusedDate={focusedDate}
-            thisMonth={thisMonth}
-            setFocusedDate={setFocusedDate}
-          />
-        ))}
-      </Animated.View>
+    <Animated.View
+      style={[weekContainerStyles.container, animatedWeekContainerStyle]}
+    >
+      {thisWeek.map(date => (
+        <CalendarDate
+          key={date.getTime()}
+          detailDate={date}
+        />
+      ))}
+    </Animated.View>
   );
 };
 
 const weekContainerStyles = StyleSheet.create({
   container: {
+    height: 80,
     flexDirection: 'row',
     justifyContent: 'space-evenly',
   },

@@ -1,32 +1,17 @@
-import { StyleSheet } from 'react-native';
+import { View } from 'react-native';
 import { CalendarDateWeek } from './CalendarDateWeek';
 import { runOnJS } from 'react-native-worklets';
-import { useEffect, useState } from 'react';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
+import { useDate } from '../context/DateContext';
 /*
 Month Component
 */
 interface CalendarMonthProps {
-  year: number;
-  month: number;
-  focusedDate: Date | null;
-  setFocusedDate: React.Dispatch<React.SetStateAction<Date | null>>;
-  focusedWeek: Date
 }
 
 export const CalendarMonth: React.FC<CalendarMonthProps> = ({
-  year,
-  month,
-  focusedDate,
-  setFocusedDate,
-  focusedWeek
 }) => {
-  const [isMonthMode, setIsMonthMode] = useState(true);
+  const { month, year, isMonthMode, setIsMonthMode, handlePrevWeek, handleNextWeek } = useDate();
 
   //첫 번째 날짜
   const firstDate = new Date(year, month, 1);
@@ -48,61 +33,37 @@ export const CalendarMonth: React.FC<CalendarMonthProps> = ({
   const dateToMonth: Date[] = [];
 
   //첫 날이 어떤 요일인지에 따라 시작일을 다르게
-  while(tmpDate.getTime() <= lastDate.getTime()) {
+  while (tmpDate.getTime() <= lastDate.getTime()) {
     const newTmpDate = new Date(tmpDate);
-    dateToMonth.push(newTmpDate)
+    dateToMonth.push(newTmpDate);
     tmpDate.setDate(tmpDate.getDate() + 7);
   }
 
-  const swipeGesture = Gesture.Pan()
-    .onEnd((event) => {
-      if (event.translationY < -50 && isMonthMode) {
-        runOnJS(setIsMonthMode)(false);
-      }
-      if (event.translationY > 50 && !isMonthMode) {
-        runOnJS(setIsMonthMode)(true);
-      }
-  });
-
-  const calendarMonthHeight = useSharedValue(1000);
-  const calendarWeekHeight = useSharedValue(200);
-  const animatedMonthHeight = useSharedValue(0);
-
-  useEffect(() => {
-      animatedMonthHeight.value = withTiming(
-        isMonthMode ? calendarMonthHeight.value : calendarWeekHeight.value,
-        {
-          duration: 200,
-        },
-      );
-  }, [isMonthMode, calendarMonthHeight.value]);
-
-  const animatedWeekContainerStyle = useAnimatedStyle(() => {
-    return {
-      height: animatedMonthHeight.value,
-      overflow: 'hidden',
-    };
+  const swipeGesture = Gesture.Pan().onEnd(event => {
+    if (event.translationY < -50 && isMonthMode) {
+      runOnJS(setIsMonthMode)(false);
+    }
+    if (event.translationY > 50 && !isMonthMode) {
+      runOnJS(setIsMonthMode)(true);
+    }
+    if (event.translationX > 50 && !isMonthMode) {
+      runOnJS(handlePrevWeek)();
+    }
+    if (event.translationX < -50 && !isMonthMode) {
+      runOnJS(handleNextWeek)();
+    }
   });
 
   return (
     <GestureDetector gesture={swipeGesture}>
-      <Animated.View style={[monthContainerStyles.container, animatedWeekContainerStyle]}>
-        {dateToMonth.map((weekFirstDay) => (
+      <View>
+        {dateToMonth.map(weekFirstDay => (
           <CalendarDateWeek
             key={weekFirstDay.getTime()}
             firstDay={weekFirstDay}
-            thisMonth={month}
-            focusedDate={focusedDate}
-            setFocusedDate={setFocusedDate}
-            focusedWeek={focusedWeek}
-            isMonthMode={isMonthMode}
           />
         ))}
-      </Animated.View>
+      </View>
     </GestureDetector>
   );
 };
-
-const monthContainerStyles = StyleSheet.create({
-  container: {},
-});
