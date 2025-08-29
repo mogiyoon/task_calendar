@@ -52,6 +52,7 @@ export const CalendarMonth: React.FC<CalendarMonthProps> = ({
     if (event.translationX < -50 && !isMonthMode) {
       runOnJS(handleNextWeek)();
     }
+    console.log(isMonthMode);
   });
 
   return (

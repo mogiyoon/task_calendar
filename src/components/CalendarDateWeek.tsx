@@ -90,6 +90,9 @@ export const CalendarDateWeek: React.FC<CalendarWeekProps> = ({
   const animatedWeekOpacity = useSharedValue(1);
 
   const isThisWeek = (stripTime(firstDay).getTime() === stripTime(focusedWeek).getTime());
+  console.log('isThis Week');
+  console.log(firstDay.toDateString());
+  console.log(focusedWeek.toDateString());
 
   useEffect(() => {
     if (isThisWeek) {

@@ -1,4 +1,4 @@
-import { createContext, useState, useContext, ReactNode, FC } from 'react';
+import { createContext, useState, useContext, ReactNode, FC, useEffect } from 'react';
 
 interface DateContextType {
   year: number;
@@ -37,15 +37,12 @@ export const DateProvider: FC<DateProviderProps> = ({ children }) => {
   const month = date.getMonth();
   const year = date.getFullYear();
   
-  const [isMonthMode, setIsMonthMode] = useState(true);
+  const [isMonthMode, setIsMonthMode] = useState<boolean>(true);
 
   const handleNextWeek = () => {
     setFocusedWeek((prev) => {
       const nextWeek = new Date(prev);
       nextWeek.setDate(nextWeek.getDate() + 7);
-      if (prev.getMonth() !== nextWeek.getMonth()) {
-        handleNextMonth();
-      }
       return nextWeek;
     })
   }
@@ -54,33 +51,30 @@ export const DateProvider: FC<DateProviderProps> = ({ children }) => {
     setFocusedWeek((prev) => {
       const prevWeek = new Date(prev);
       prevWeek.setDate(prevWeek.getDate() - 7);
-      if (prev.getMonth() !== prevWeek.getMonth()) {
-        handlePrevMonth();
-      }
       return prevWeek;
     })
   }
 
+  useEffect(() => {
+    setDate(focusedWeek)
+  }, [focusedWeek])
+
   const handleNextMonth = () => {
-    console.log('handle next month')
-    const newMonth = month + 1
-    setDate(new Date(year, newMonth));
-    setFocusedWeek(() => {
-      const newWeek = new Date(year, newMonth, 1);
-      newWeek.setDate(newWeek.getDate() - newWeek.getDay());
-      return newWeek;
-    })
+    const newMonth = month + 1;
+    const newDate = new Date(year, newMonth, 1);
+    if (newDate.getDay() !== 0) {
+      newDate.setDate(newDate.getDate() + (7 - newDate.getDay()));
+    }
+    setFocusedWeek(newDate);
   }
 
   const handlePrevMonth = () => {
-    console.log('handle prev month')
-    const newMonth = month - 1
-    setDate(new Date(year, newMonth));
-    setFocusedWeek(() => {
-      const newWeek = new Date(year, newMonth, 1);
-      newWeek.setDate(newWeek.getDate() - newWeek.getDay());
-      return newWeek;
-    })
+    const newMonth = month - 1;
+    const newDate = new Date(year, newMonth, 1);
+    if (newDate.getDay() !== 0) {
+      newDate.setDate(newDate.getDate() + (7 - newDate.getDay()));
+    }
+    setFocusedWeek(newDate);
   }
 
   const handleNext = () => {
