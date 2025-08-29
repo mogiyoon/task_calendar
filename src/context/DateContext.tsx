@@ -27,15 +27,15 @@ interface DateProviderProps {
 }
 
 export const DateProvider: FC<DateProviderProps> = ({ children }) => {
+  /*  */
   const [date, setDate] = useState(new Date());
+  const month = date.getMonth();
+  const year = date.getFullYear();
   
   const weekFirstDate = new Date();
   weekFirstDate.setDate(date.getDate() - date.getDay());
   const [focusedDate, setFocusedDate] = useState<Date | null>(null);
   const [focusedWeek, setFocusedWeek] = useState<Date>(weekFirstDate);
-
-  const month = date.getMonth();
-  const year = date.getFullYear();
   
   const [isMonthMode, setIsMonthMode] = useState<boolean>(true);
 

@@ -7,6 +7,7 @@ import Animated, {
 import { useEffect } from 'react';
 import { useDate } from '../context/DateContext';
 import { stripTime } from '../utils/stripTime';
+import { useAnimation } from '../context/AnimationContext';
 /*
 Date Component
 */
@@ -14,10 +15,7 @@ interface CalendarDateProps {
   detailDate: Date;
 }
 
-const CalendarDate: React.FC<CalendarDateProps> = ({
-  detailDate,
-}) => {
-
+const CalendarDate: React.FC<CalendarDateProps> = ({ detailDate }) => {
   const { month, focusedDate, setFocusedDate } = useDate();
 
   return (
@@ -72,10 +70,9 @@ interface CalendarWeekProps {
   firstDay: Date;
 }
 
-export const CalendarDateWeek: React.FC<CalendarWeekProps> = ({
-  firstDay,
-}) => {
+export const CalendarDateWeek: React.FC<CalendarWeekProps> = ({ firstDay }) => {
   const { focusedWeek, isMonthMode } = useDate();
+  const { shouldAnimate } = useAnimation();
 
   const thisWeek: Date[] = [];
   const tmpDate = new Date(firstDay);
@@ -89,35 +86,44 @@ export const CalendarDateWeek: React.FC<CalendarWeekProps> = ({
   const calendarWeekOpacity = useSharedValue(1);
   const animatedWeekOpacity = useSharedValue(1);
 
-  const isThisWeek = (stripTime(firstDay).getTime() === stripTime(focusedWeek).getTime());
-  console.log('isThis Week');
-  console.log(firstDay.toDateString());
-  console.log(focusedWeek.toDateString());
+  const isThisWeek =
+    stripTime(firstDay).getTime() === stripTime(focusedWeek).getTime();
 
   useEffect(() => {
     if (isThisWeek) {
       animatedWeekHeight.value = calendarWeekHeight.value;
       animatedWeekOpacity.value = calendarWeekOpacity.value;
     } else {
-      animatedWeekHeight.value = withTiming(
-        isMonthMode ? calendarWeekHeight.value : 0,
-        {
-          duration: 1000,
-        },
-      );
-      animatedWeekOpacity.value = withTiming(
-        isMonthMode ? calendarWeekOpacity.value : 0,
-        {
-          duration: 800,
-        },
-      );
+      if (shouldAnimate.value) {
+        animatedWeekHeight.value = withTiming(
+          isMonthMode ? calendarWeekHeight.value : 0,
+          {
+            duration: 1000,
+          },
+
+          finished => {
+            if (finished) {
+              shouldAnimate.value = false;
+            }
+          },
+        );
+        animatedWeekOpacity.value = withTiming(
+          isMonthMode ? calendarWeekOpacity.value : 0,
+          {
+            duration: 800,
+          },
+        );
+      }
     }
-  }, [    isMonthMode,
+  }, [
+    isMonthMode,
     isThisWeek,
     animatedWeekHeight,
     animatedWeekOpacity,
     calendarWeekHeight,
-    calendarWeekOpacity,]);
+    calendarWeekOpacity,
+    shouldAnimate,
+  ]);
 
   const animatedWeekContainerStyle = useAnimatedStyle(() => {
     return {
@@ -132,10 +138,7 @@ export const CalendarDateWeek: React.FC<CalendarWeekProps> = ({
       style={[weekContainerStyles.container, animatedWeekContainerStyle]}
     >
       {thisWeek.map(date => (
-        <CalendarDate
-          key={date.getTime()}
-          detailDate={date}
-        />
+        <CalendarDate key={date.getTime()} detailDate={date} />
       ))}
     </Animated.View>
   );

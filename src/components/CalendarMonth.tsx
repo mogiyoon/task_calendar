@@ -3,6 +3,7 @@ import { CalendarDateWeek } from './CalendarDateWeek';
 import { runOnJS } from 'react-native-worklets';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useDate } from '../context/DateContext';
+import { useAnimation } from '../context/AnimationContext';
 /*
 Month Component
 */
@@ -12,6 +13,7 @@ interface CalendarMonthProps {
 export const CalendarMonth: React.FC<CalendarMonthProps> = ({
 }) => {
   const { month, year, isMonthMode, setIsMonthMode, handlePrevWeek, handleNextWeek } = useDate();
+  const { shouldAnimate } = useAnimation();
 
   //첫 번째 날짜
   const firstDate = new Date(year, month, 1);
@@ -41,9 +43,12 @@ export const CalendarMonth: React.FC<CalendarMonthProps> = ({
 
   const swipeGesture = Gesture.Pan().onEnd(event => {
     if (event.translationY < -50 && isMonthMode) {
+      console.log('gesture work');
+      shouldAnimate.value = true;
       runOnJS(setIsMonthMode)(false);
     }
     if (event.translationY > 50 && !isMonthMode) {
+      shouldAnimate.value = true;
       runOnJS(setIsMonthMode)(true);
     }
     if (event.translationX > 50 && !isMonthMode) {
