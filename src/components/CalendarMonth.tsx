@@ -48,6 +48,7 @@ export const CalendarMonth: React.FC<CalendarMonthProps> = ({
       runOnJS(setIsMonthMode)(false);
     }
     if (event.translationY > 50 && !isMonthMode) {
+      console.log('gesture work');
       shouldAnimate.value = true;
       runOnJS(setIsMonthMode)(true);
     }

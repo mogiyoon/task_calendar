@@ -1,13 +1,15 @@
 import { StyleSheet, Text, TouchableOpacity } from 'react-native';
 import Animated, {
+  useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useDate } from '../context/DateContext';
 import { stripTime } from '../utils/stripTime';
 import { useAnimation } from '../context/AnimationContext';
+import { runOnJS } from 'react-native-worklets';
 /*
 Date Component
 */
@@ -73,6 +75,7 @@ interface CalendarWeekProps {
 export const CalendarDateWeek: React.FC<CalendarWeekProps> = ({ firstDay }) => {
   const { focusedWeek, isMonthMode } = useDate();
   const { shouldAnimate } = useAnimation();
+  const [showComponent, setShowComponent] = useState(false); // <-- New state variable
 
   const thisWeek: Date[] = [];
   const tmpDate = new Date(firstDay);
@@ -88,6 +91,17 @@ export const CalendarDateWeek: React.FC<CalendarWeekProps> = ({ firstDay }) => {
 
   const isThisWeek =
     stripTime(firstDay).getTime() === stripTime(focusedWeek).getTime();
+
+  useAnimatedReaction(
+    () => {
+      return shouldAnimate.value;
+    },
+    (animate, prevAnimate) => {
+      if (animate !== prevAnimate) {
+        runOnJS(setShowComponent)(animate);
+      }
+    }
+  );
 
   useEffect(() => {
     if (isThisWeek) {
@@ -113,9 +127,6 @@ export const CalendarDateWeek: React.FC<CalendarWeekProps> = ({ firstDay }) => {
             duration: 800,
           },
         );
-      } else {
-        animatedWeekHeight.value = isMonthMode ? calendarWeekHeight.value : 0;
-        animatedWeekOpacity.value = isMonthMode ? calendarWeekOpacity.value : 0;
       }
     }
   }, [
@@ -137,13 +148,15 @@ export const CalendarDateWeek: React.FC<CalendarWeekProps> = ({ firstDay }) => {
   });
 
   return (
-    <Animated.View
+  <>
+    {(isMonthMode || isThisWeek || showComponent) && <Animated.View
       style={[weekContainerStyles.container, animatedWeekContainerStyle]}
     >
       {thisWeek.map(date => (
         <CalendarDate key={date.getTime()} detailDate={date} />
       ))}
-    </Animated.View>
+    </Animated.View>}
+  </>
   );
 };
 
