@@ -23,7 +23,7 @@ interface CalendarWeekProps {
 
 export const CalendarWeek: React.FC<CalendarWeekProps> = ({ firstDay }) => {
   const { focusedWeek, isMonthMode, setIsMonthMode, handlePrevWeek, handleNextWeek } = useDateContext();
-  const { shouldAnimateY } = useAnimationContext();
+  const { shouldAnimateY, shouldAnimateX } = useAnimationContext();
   const [showComponentY, setShowComponentY] = useState(false);
   const { width: screenWidth} = useWindowDimensions();
 
@@ -92,10 +92,12 @@ export const CalendarWeek: React.FC<CalendarWeekProps> = ({ firstDay }) => {
       else if (!isMonthMode) {
         if (event.translationX < -SWIPE_THRESHOLD) {
           offsetX.value = withTiming(-screenWidth, {}, () => {
+            shouldAnimateX.value = true;
             runOnJS(handleNextWeek)();
           });
         } else if (event.translationX > SWIPE_THRESHOLD) {
           offsetX.value = withTiming(screenWidth, {}, () => {
+            shouldAnimateX.value = true;
             runOnJS(handlePrevWeek)();
           });
         } else {
@@ -104,13 +106,33 @@ export const CalendarWeek: React.FC<CalendarWeekProps> = ({ firstDay }) => {
       }
     });
 
+  const focusedWeekSV = useSharedValue(stripTime(focusedWeek).getTime());
+
+  /**
+   * Make the offset update coincide with the frame
+   * in which the UI thread updates the focused week.
+   */
+  useEffect(() => {
+    focusedWeekSV.value = stripTime(focusedWeek).getTime();
+  }, [focusedWeek]);
+
+  useAnimatedReaction(
+    () => focusedWeekSV.value,
+    () => {
+      if (shouldAnimateX.value) {
+        offsetX.value = 0;
+        shouldAnimateX.value = false;
+      }
+    }
+  );
+
   /**
    * when the week change animation ends,
    * useEffect will aligns the week component
    */
   useEffect(() => {
     offsetX.value = 0;
-  }, [focusedWeek, isMonthMode])
+  }, [isMonthMode])
 
   /**
    * when the components are rendered,
