@@ -84,13 +84,17 @@ export const CalendarDateWeek: React.FC<CalendarWeekProps> = ({ firstDay }) => {
     tmpDate.setDate(tmpDate.getDate() + 1);
   }
 
-  const calendarWeekHeight = useSharedValue(56);
-  const animatedWeekHeight = useSharedValue(56);
-  const calendarWeekOpacity = useSharedValue(1);
-  const animatedWeekOpacity = useSharedValue(1);
-
   const isThisWeek =
     stripTime(firstDay).getTime() === stripTime(focusedWeek).getTime();
+
+  const initialHeight = isMonthMode || isThisWeek ? 56 : 0;
+  const calendarWeekHeight = useSharedValue(56);
+  const animatedWeekHeight = useSharedValue(initialHeight);
+
+  const initialOpacity = isMonthMode || isThisWeek ? 1 : 0;
+  const calendarWeekOpacity = useSharedValue(1);
+  const animatedWeekOpacity = useSharedValue(initialOpacity);
+
 
   useAnimatedReaction(
     () => {
@@ -127,6 +131,9 @@ export const CalendarDateWeek: React.FC<CalendarWeekProps> = ({ firstDay }) => {
             duration: 800,
           },
         );
+      } else {
+        animatedWeekHeight.value = isMonthMode ? calendarWeekHeight.value : 0;
+        animatedWeekOpacity.value = isMonthMode ? calendarWeekOpacity.value : 0;
       }
     }
   }, [

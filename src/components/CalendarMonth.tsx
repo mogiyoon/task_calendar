@@ -43,12 +43,10 @@ export const CalendarMonth: React.FC<CalendarMonthProps> = ({
 
   const swipeGesture = Gesture.Pan().onEnd(event => {
     if (event.translationY < -50 && isMonthMode) {
-      console.log('gesture work');
       shouldAnimate.value = true;
       runOnJS(setIsMonthMode)(false);
     }
     if (event.translationY > 50 && !isMonthMode) {
-      console.log('gesture work');
       shouldAnimate.value = true;
       runOnJS(setIsMonthMode)(true);
     }
@@ -58,7 +56,6 @@ export const CalendarMonth: React.FC<CalendarMonthProps> = ({
     if (event.translationX < -50 && !isMonthMode) {
       runOnJS(handleNextWeek)();
     }
-    console.log(isMonthMode);
   });
 
   return (
