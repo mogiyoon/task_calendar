@@ -1,9 +1,8 @@
-import { View } from 'react-native';
-import { CalendarDateWeek } from './CalendarWeek';
-import { runOnJS } from 'react-native-worklets';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { CalendarWeek } from './CalendarWeek';
 import { useDate } from '../context/DateContext';
-import { useAnimation } from '../context/AnimationContext';
+import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+import { useMemo } from 'react';
 /*
 Month Component
 */
@@ -12,8 +11,8 @@ interface CalendarMonthProps {
 
 export const CalendarMonth: React.FC<CalendarMonthProps> = ({
 }) => {
-  const { month, year, isMonthMode, setIsMonthMode } = useDate();
-  const { shouldAnimateY } = useAnimation();
+  const { month, year, isMonthMode } = useDate();
+  const { width: screenWidth} = useWindowDimensions();
 
   //첫 번째 날짜
   const firstDate = new Date(year, month, 1);
@@ -32,36 +31,57 @@ export const CalendarMonth: React.FC<CalendarMonthProps> = ({
   const finalWeekDate = new Date(year, month, 1);
   finalWeekDate.setDate(lastDate.getDate() - lastDay);
 
-  const dateToMonth: Date[] = [];
-
   //첫 날이 어떤 요일인지에 따라 시작일을 다르게
+  const dateToMonth: Date[] = [];
   while (tmpDate.getTime() <= lastDate.getTime()) {
     const newTmpDate = new Date(tmpDate);
     dateToMonth.push(newTmpDate);
     tmpDate.setDate(tmpDate.getDate() + 7);
   }
 
-  const swipeGesture = Gesture.Pan().onEnd(event => {
-    if (event.translationY < -50 && isMonthMode) {
-      shouldAnimateY.value = true;
-      runOnJS(setIsMonthMode)(false);
-    }
-    if (event.translationY > 50 && !isMonthMode) {
-      shouldAnimateY.value = true;
-      runOnJS(setIsMonthMode)(true);
-    }
+  const offsetX = useSharedValue(0);
+  const animatedPagerStyle = useAnimatedStyle(() => {
+    const xPosition = -screenWidth + offsetX.value;
+    return {
+      transform: [{ translateX: xPosition }],
+    };
   });
 
+  const dynamicStyles = useMemo(
+    () =>
+      StyleSheet.create({
+        pagerContainer: {
+          width: screenWidth * 3,
+        },
+        monthPage: {
+          width: screenWidth,
+        },
+      }),
+    [screenWidth]
+  );
+  
   return (
-    <GestureDetector gesture={swipeGesture}>
+    <Animated.View style={[monthContainerStyles.pagerContainer, dynamicStyles.pagerContainer, animatedPagerStyle]}>
+      { isMonthMode && <View style={[dynamicStyles.monthPage, monthContainerStyles.monthPageBase]} /> 
+      }
       <View>
         {dateToMonth.map(weekFirstDay => (
-          <CalendarDateWeek
+          <CalendarWeek
             key={weekFirstDay.getTime()}
             firstDay={weekFirstDay}
           />
         ))}
       </View>
-    </GestureDetector>
+      { isMonthMode && <View style={[dynamicStyles.monthPage, monthContainerStyles.monthPageBase]} /> }
+    </Animated.View>
   );
 };
+
+const monthContainerStyles = StyleSheet.create({
+  pagerContainer: {
+    flexDirection: 'row',
+  },
+  monthPageBase: {
+    flexDirection: 'column',
+  },
+});
