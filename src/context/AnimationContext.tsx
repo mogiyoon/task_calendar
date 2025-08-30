@@ -2,7 +2,8 @@ import { createContext, FC, ReactNode, useContext } from 'react';
 import { SharedValue, useSharedValue } from 'react-native-reanimated';
 
 interface AnimationContextType {
-  shouldAnimate: SharedValue<boolean>;
+  shouldAnimateY: SharedValue<boolean>;
+  shouldAnimateX: SharedValue<boolean>;
 }
 
 const AnimationContext = createContext<AnimationContextType | null>(null);
@@ -12,10 +13,12 @@ interface AnimationProviderProps {
 }
 
 export const AnimationProvider: FC<AnimationProviderProps> = ({children}) => {
-  const shouldAnimate = useSharedValue(false);
+  const shouldAnimateY = useSharedValue(false);
+  const shouldAnimateX = useSharedValue(false);
 
   const value: AnimationContextType = {
-    shouldAnimate: shouldAnimate,
+    shouldAnimateY: shouldAnimateY,
+    shouldAnimateX: shouldAnimateX,
   }
 
   return <AnimationContext.Provider value={value}>{children}</AnimationContext.Provider>;
