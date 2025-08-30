@@ -27,11 +27,17 @@ interface DateProviderProps {
 }
 
 export const DateProvider: FC<DateProviderProps> = ({ children }) => {
-  /*  */
+  /**
+   * initialize date, month, year
+   */
   const [date, setDate] = useState(new Date());
   const month = date.getMonth();
   const year = date.getFullYear();
   
+  /**
+   * @focusedDate is used when user press day
+   * @focusedWeek is the first day of week in week mode
+   */
   const weekFirstDate = new Date(date);
   weekFirstDate.setDate(weekFirstDate.getDate() - weekFirstDate.getDay());
   const [focusedDate, setFocusedDate] = useState<Date | null>(null);
@@ -55,10 +61,19 @@ export const DateProvider: FC<DateProviderProps> = ({ children }) => {
     })
   }
 
+  /**
+   * if change of focusedWeek change focused month,
+   * setDate make old month to new month
+   */
   useEffect(() => {
     setDate(focusedWeek)
   }, [focusedWeek])
 
+
+  /**
+   * if the user changes month through month mode,
+   * focused week is focusing on the first day of the month
+   */
   const handleNextMonth = () => {
     const newMonth = month + 1;
     const newDate = new Date(year, newMonth, 1);
@@ -116,7 +131,7 @@ export const DateProvider: FC<DateProviderProps> = ({ children }) => {
   return <DateContext.Provider value={value}>{children}</DateContext.Provider>;
 }
 
-export const useDate = () => {
+export const useDateContext = () => {
   const context = useContext(DateContext);
   if (!context) {
     throw new Error('useDate must be used within a DateProvider');

@@ -1,5 +1,5 @@
 import { StyleSheet, Text, TouchableOpacity } from 'react-native';
-import { useDate } from '../context/DateContext';
+import { useDateContext } from '../context/DateContext';
 
 /*
 Date Component
@@ -9,7 +9,7 @@ interface CalendarDateProps {
 }
 
 export const CalendarDate: React.FC<CalendarDateProps> = ({ detailDate }) => {
-  const { month, focusedDate, setFocusedDate } = useDate();
+  const { month, focusedDate, setFocusedDate } = useDateContext();
 
   return (
     <TouchableOpacity

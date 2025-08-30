@@ -5,7 +5,7 @@
  * @format
  */
 import { NavigationContainer } from '@react-navigation/native';
-import MyTabs from './components/MyTabs';
+import MyTabs from './navigation/MyTabs';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 function App() {

@@ -6,26 +6,31 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useEffect, useMemo, useState } from 'react';
-import { useDate } from '../context/DateContext';
+import { useDateContext } from '../context/DateContext';
 import { stripTime } from '../utils/stripTime';
-import { useAnimation } from '../context/AnimationContext';
+import { useAnimationContext } from '../context/AnimationContext';
 import { runOnJS } from 'react-native-worklets';
 import { CalendarDate } from './CalendarDate';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 /*
 Week Component
+which involves mode change gesture
+and week change gesture with animation
 */
 interface CalendarWeekProps {
   firstDay: Date;
 }
 
 export const CalendarWeek: React.FC<CalendarWeekProps> = ({ firstDay }) => {
-  const { focusedWeek, isMonthMode, setIsMonthMode, handlePrevWeek, handleNextWeek } = useDate();
-  const { shouldAnimateY } = useAnimation();
+  const { focusedWeek, isMonthMode, setIsMonthMode, handlePrevWeek, handleNextWeek } = useDateContext();
+  const { shouldAnimateY } = useAnimationContext();
   const [showComponentY, setShowComponentY] = useState(false);
   const { width: screenWidth} = useWindowDimensions();
 
-  // 이전 주, 현재 주, 다음 주
+  /**
+   * prev week, this week, next week
+   * these array are used render prev/next week animation
+   */
   const thisWeek: Date[] = [];
   const tmpDate = new Date(firstDay);
   for (let i = 0; i < 7; i++) {
@@ -49,15 +54,17 @@ export const CalendarWeek: React.FC<CalendarWeekProps> = ({ firstDay }) => {
     tmpNextDate.setDate(tmpNextDate.getDate() + 1);
   }
 
-  //주 달력에서 렌더링 확인용
+  /**
+   * this const checks whether this week is the focused week or not
+   */
   const isThisWeek =
     stripTime(firstDay).getTime() === stripTime(focusedWeek).getTime();
 
-  console.log(isThisWeek)
-  console.log(firstDay.toDateString())
-  console.log(focusedWeek.toDateString())
-
-  // X Animation
+  /**
+   * if the user swipes this component vertically,
+   * @offsetX changes value as user swipes @onUpdated
+   * the value is reflected in @animatedPagerStyle
+   */
   const offsetX = useSharedValue(0);
 
   const panGesture = Gesture.Pan()
@@ -69,6 +76,9 @@ export const CalendarWeek: React.FC<CalendarWeekProps> = ({ firstDay }) => {
     .onEnd(event => {
       const SWIPE_THRESHOLD = screenWidth / 3;
 
+      /**
+       * this function changes mode (week <-> month)
+       */
       if (event.translationY < -50 && isMonthMode) {
         shouldAnimateY.value = true;
         runOnJS(setIsMonthMode)(false);
@@ -76,6 +86,9 @@ export const CalendarWeek: React.FC<CalendarWeekProps> = ({ firstDay }) => {
         shouldAnimateY.value = true;
         runOnJS(setIsMonthMode)(true);
       }
+      /**
+       * this function changes week
+       */
       else if (!isMonthMode) {
         if (event.translationX < -SWIPE_THRESHOLD) {
           offsetX.value = withTiming(-screenWidth, {}, () => {
@@ -91,19 +104,35 @@ export const CalendarWeek: React.FC<CalendarWeekProps> = ({ firstDay }) => {
       }
     });
 
+  /**
+   * when the week change animation ends,
+   * useEffect will aligns the week component
+   */
   useEffect(() => {
     offsetX.value = 0;
   }, [focusedWeek, isMonthMode])
 
-  // Y Animation
-  const initialHeight = isMonthMode || isThisWeek ? 56 : 0;
-  const calendarWeekHeight = useSharedValue(56);
+  /**
+   * when the components are rendered,
+   * month mode affects their height and opacity
+   * if the mode isn't month mode, 
+   * week component is rendered only for this week
+   */
+  const initialHeight = isMonthMode || isThisWeek ? 48 : 0;
+  const calendarWeekHeight = useSharedValue(48);
   const animatedWeekHeight = useSharedValue(initialHeight);
 
   const initialOpacity = isMonthMode || isThisWeek ? 1 : 0;
   const calendarWeekOpacity = useSharedValue(1);
   const animatedWeekOpacity = useSharedValue(initialOpacity);
 
+  /**
+   * Show Component is only true
+   * while the mode change animation is running.
+   * That is, even if isMonthMode is false,
+   * if the animation works,
+   * not only this week but also other weeks are visible
+   */
   useAnimatedReaction(
     () => {
       return shouldAnimateY.value;
@@ -115,9 +144,12 @@ export const CalendarWeek: React.FC<CalendarWeekProps> = ({ firstDay }) => {
     }
   );
 
-  useEffect(() => {
 
-    // Y Animation
+  /**
+   * mode change animation.
+   * change height and opacity
+   */
+  useEffect(() => {
     if (isThisWeek) {
       animatedWeekHeight.value = calendarWeekHeight.value;
       animatedWeekOpacity.value = calendarWeekOpacity.value;
@@ -142,6 +174,10 @@ export const CalendarWeek: React.FC<CalendarWeekProps> = ({ firstDay }) => {
           },
         );
       } else {
+        /**
+         * if the mode change has ended,
+         * there is no need to animate other weeks
+         */
         animatedWeekHeight.value = isMonthMode ? calendarWeekHeight.value : 0;
         animatedWeekOpacity.value = isMonthMode ? calendarWeekOpacity.value : 0;
       }

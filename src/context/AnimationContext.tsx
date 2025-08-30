@@ -24,7 +24,7 @@ export const AnimationProvider: FC<AnimationProviderProps> = ({children}) => {
   return <AnimationContext.Provider value={value}>{children}</AnimationContext.Provider>;
 }
 
-export const useAnimation = () => {
+export const useAnimationContext = () => {
   const context = useContext(AnimationContext);
   if (!context) {
     throw new Error('useAnimation must be used within a AnimationProvider');

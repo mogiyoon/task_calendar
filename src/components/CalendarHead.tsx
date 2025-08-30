@@ -1,13 +1,12 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { useDate } from '../context/DateContext';
+import { useDateContext } from '../context/DateContext';
 
 /*
 Calendar Head
 */
-
 export const CalendarHead: React.FC = () => {
-  const { year, month, handlePrev, handleNext } = useDate()
+  const { year, month, handlePrev, handleNext } = useDateContext()
   const tmpDate = new Date(year, month);
   const iconColor = '#3aa0ff';
   const iconSize = 20;
@@ -18,6 +17,7 @@ export const CalendarHead: React.FC = () => {
         <Ionicons name="chevron-back" color={iconColor} size={iconSize} />
       </TouchableOpacity>
       <Text style={headStyles.fontStyle}>
+        {/* change date information to month and year */}
         {tmpDate.toLocaleString('en-US', { month: 'long' })}{' '}
         {tmpDate.getFullYear()}
       </Text>

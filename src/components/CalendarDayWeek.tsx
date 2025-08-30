@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 /*
 Calendar Day
+Just render day
 */
 interface CalendarDayProps {
   day: string;
