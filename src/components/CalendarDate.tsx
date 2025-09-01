@@ -9,7 +9,7 @@ interface CalendarDateProps {
 }
 
 export const CalendarDate: React.FC<CalendarDateProps> = ({ detailDate }) => {
-  const { month, focusedDate, setFocusedDate } = useDateContext();
+  const { month, isMonthMode, focusedDate, setFocusedDate } = useDateContext();
 
   return (
     <TouchableOpacity
@@ -22,9 +22,9 @@ export const CalendarDate: React.FC<CalendarDateProps> = ({ detailDate }) => {
     >
       <Text
         style={
-          detailDate.getMonth() === month
-            ? dateTextStyles.sameMonthText
-            : dateTextStyles.diffMonthText
+          (detailDate.getMonth() !== month) && isMonthMode
+            ? dateTextStyles.diffMonthText
+            : dateTextStyles.sameMonthText
         }
       >
         {detailDate.getDate()}
